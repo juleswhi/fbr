@@ -20,3 +20,12 @@ pages/
     | - subdir/
         |
         | - nested.html
+
+root
+folder/page
+
+/pages/root
+/pages/other_file
+
+-- path/to/file
+-- pages/path/to/file

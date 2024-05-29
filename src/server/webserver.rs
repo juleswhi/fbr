@@ -28,8 +28,7 @@ fn handle_conn(mut stream: TcpStream) {
     let (status_line, filename) = match req_line[1] {
         "/" => ("HTTP/1.1 200 OK".to_string(), "root.html".to_string()),
         path => {
-            println!("Path: {}", path);
-            let path_spl: Vec<String> = path.split("/").map(|x| x.to_string()).collect();
+            let path_spl: Vec<String> = path.split("/").map(|x| x.to_string()).skip(1).collect();
             let mut header = ("HTTP/1.1 404 NOT FOUND".to_string(), "404.html".to_string());
             let files = router::router::get_all_files();
             let spl = router::router::split_files(files);
@@ -37,14 +36,18 @@ fn handle_conn(mut stream: TcpStream) {
             let pages = router::router::filter_pages(&spl);
 
             for page in pages.unwrap_or(vec![]) {
-                println!("Page 0: {}, Path 0: {}", page[1], path_spl[1]);
-                let _l = page.len();
-                let _i: usize = 0;
+                let page_path = page[1..]
+                    .iter()
+                    .map(|x| x.split(".html").collect::<Vec<&str>>()[0])
+                    .collect::<Vec<&str>>()
+                    .join("/");
 
-                if page[1].split(".html").collect::<Vec<&str>>()[0] == path_spl[1] {
-                    let cl = page.clone();
-                    let name = cl.join("/");
-                    header = ("HTTP/1.1 200 OK".to_string(), name.clone());
+                let path_path = path_spl.join("/");
+
+                if page_path == path_path {
+                    let fm = format!("pages/{page_path}.html");
+                    println!("{}", fm);
+                    header = ("HTTP/1.1 200 OK".to_string(), fm);
                 }
             }
 
