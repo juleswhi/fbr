@@ -1,3 +1,5 @@
+use std::fs;
+
 use walkdir::WalkDir;
 
 pub fn get_all_files() -> Vec<String> {
@@ -35,4 +37,13 @@ pub fn filter_pages(files: &Vec<Vec<String>>) -> Option<Vec<Vec<String>>> {
         pages.push(dir.to_vec());
     }
     Some(pages)
+}
+
+pub fn check_root() -> bool {
+    let contents = fs::read_to_string("pages/root.html");
+
+    return match contents {
+        Ok(_) => true,
+        Err(_) => false,
+    }
 }

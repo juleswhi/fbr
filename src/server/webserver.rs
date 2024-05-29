@@ -6,9 +6,16 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
-use crate::router::{self};
+use crate::router::router;
 
 pub fn run() {
+    let has_root = router::check_root();
+
+    if !has_root {
+        println!("Server must contain a 'root.html' page in the root pages directory.");
+        return;
+    }
+
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
 
     for stream in listener.incoming() {
@@ -26,14 +33,14 @@ fn handle_conn(mut stream: TcpStream) {
     let req_line: Vec<&str> = binding.split(" ").collect();
 
     let (status_line, filename) = match req_line[1] {
-        "/" => ("HTTP/1.1 200 OK".to_string(), "root.html".to_string()),
+        "/" => ("HTTP/1.1 200 OK".to_string(), "pages/root.html".to_string()),
         path => {
             let path_spl: Vec<String> = path.split("/").map(|x| x.to_string()).skip(1).collect();
             let mut header = ("HTTP/1.1 404 NOT FOUND".to_string(), "404.html".to_string());
-            let files = router::router::get_all_files();
-            let spl = router::router::split_files(files);
+            let files = router::get_all_files();
+            let spl = router::split_files(files);
 
-            let pages = router::router::filter_pages(&spl);
+            let pages = router::filter_pages(&spl);
 
             for page in pages.unwrap_or(vec![]) {
                 let page_path = page[1..]
@@ -46,7 +53,6 @@ fn handle_conn(mut stream: TcpStream) {
 
                 if page_path == path_path {
                     let fm = format!("pages/{page_path}.html");
-                    println!("{}", fm);
                     header = ("HTTP/1.1 200 OK".to_string(), fm);
                 }
             }
